@@ -1,4 +1,3 @@
-js
 // Função serverless da Vercel: busca o CSV publicado do Google Sheets no servidor
 // (não no navegador), evitando o bloqueio de CORS que o Google aplica a pedidos
 // feitos direto do navegador. O navegador chama /api/sheet?source=NOME, e essa
