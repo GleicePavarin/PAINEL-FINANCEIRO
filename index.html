@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Painel Financeiro Mensal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14181C; --panel:#1D2329; --panel-raised:#242B32;
+    --paper:#EDEAE0; --muted:#8A9099;
+    --green:#4F9B7F; --red:#C1584A; --gold:#D4AF6A; --blue:#6E9BC7;
+    --line: rgba(237,234,224,0.09);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;min-height:100vh;padding:32px 24px 64px;}
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:14px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:34px;height:34px;border:1.5px solid var(--gold);border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;color:var(--gold);font-size:18px;font-weight:700;}
+  .brand h1{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:0;letter-spacing:0.3px;}
+  .brand p{margin:0;color:var(--muted);font-size:12.5px;}
+
+  .month-picker{display:flex;align-items:center;gap:10px;}
+  .month-picker button{background:var(--panel);border:1px solid var(--line);color:var(--paper);width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:14px;}
+  .month-picker button:hover{border-color:var(--gold);}
+  #monthLabel{font-family:'JetBrains Mono',monospace;font-size:14px;min-width:130px;text-align:center;text-transform:capitalize;}
+
+  .grid-top{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
+  @media(max-width:820px){.grid-top{grid-template-columns:1fr;}}
+
+  .hero{background:linear-gradient(180deg,var(--panel-raised),var(--panel));border:1px solid var(--line);border-radius:10px;padding:24px 28px;}
+  .hero-label{font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .hero-value{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:38px;font-weight:700;color:var(--gold);line-height:1;}
+  .hero-delta{font-size:12.5px;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+  .up{color:var(--green);} .down{color:var(--red);} .neutral{color:var(--muted);}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;}
+  .stat-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;}
+
+  .card-title{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--paper);margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .card-title::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;}
+
+  .section{margin-bottom:28px;}
+  .section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .section-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:2px;text-transform:uppercase;font-weight:600;white-space:nowrap;}
+  .section-eyebrow.fat{color:var(--blue);}
+  .section-eyebrow.caixa{color:var(--green);}
+  .section-line{flex:1;height:1px;background:var(--line);}
+
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+  @media(max-width:820px){.charts-grid{grid-template-columns:1fr;}}
+  .chart-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;}
+  .chart-wrap{overflow-x:auto;}
+  svg.chart{display:block;width:100%;height:180px;}
+  .chart-legend{display:flex;gap:16px;margin-top:10px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;}
+  .chart-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+
+  .breakdown-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px;}
+  @media(max-width:900px){.breakdown-grid{grid-template-columns:1fr;}}
+  .breakdown-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;}
+  .breakdown-total{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);margin:-8px 0 14px;}
+  .bd-row{margin-bottom:12px;}
+  .bd-row:last-child{margin-bottom:0;}
+  .bd-row-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:5px;gap:8px;}
+  .bd-row-name{color:var(--paper);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bd-row-value{font-family:'JetBrains Mono',monospace;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .bd-bar-track{background:rgba(237,234,224,0.06);border-radius:4px;height:6px;overflow:hidden;}
+  .bd-bar-fill{height:100%;border-radius:4px;}
+  .bd-empty{color:var(--muted);font-size:12.5px;padding:8px 0;}
+
+  .empty-state{padding:30px 22px;color:var(--muted);font-size:13px;text-align:center;}
+
+  .tabela-mensal{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:13px;}
+  .tabela-mensal tr{border-bottom:1px dashed var(--line);}
+  .tabela-mensal tr:last-child{border-bottom:none;}
+  .tabela-mensal td{padding:9px 0;}
+  .tabela-mensal .tm-mes{color:var(--paper);font-family:'Inter',sans-serif;text-transform:capitalize;}
+  .tabela-mensal .tm-valor{text-align:right;font-weight:600;color:var(--paper);font-variant-numeric:tabular-nums;}
+  .tabela-mensal .tm-var{text-align:right;font-size:11.5px;width:80px;}
+  .tabela-mensal tr.tm-selected .tm-mes,.tabela-mensal tr.tm-selected .tm-valor{color:var(--gold);}
+
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+  #loadingOverlay{position:fixed;inset:0;background:var(--ink);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;transition:opacity .25s ease;}
+  #loadingOverlay.hidden{opacity:0;pointer-events:none;}
+  .loading-box{max-width:420px;text-align:center;color:var(--paper);font-family:'Inter',sans-serif;}
+  .loading-spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;margin:0 auto 16px;animation:spin 0.9s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loadingStatus{color:var(--muted);font-size:13px;}
+  #loadingError{display:none;text-align:left;font-size:13px;color:var(--paper);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:12px;}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="loading-box">
+    <div id="loadingSpinner" class="loading-spinner"></div>
+    <div id="loadingStatus">Carregando dados das planilhas…</div>
+    <div id="loadingError"></div>
+  </div>
+</div>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">$</div>
+      <div>
+        <h1>Painel Financeiro</h1>
+        <p>Faturamento e fluxo de caixa por mês (análise)</p>
+      </div>
+    </div>
+    <div class="month-picker">
+      <button id="prevMonth">‹</button>
+      <span id="monthLabel">julho de 2026</span>
+      <button id="nextMonth">›</button>
+    </div>
+  </header>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-eyebrow fat">Faturamento</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="grid-top">
+      <div class="hero">
+        <div class="hero-label">Faturamento do mês (líquido de devolução)</div>
+        <div class="hero-value" id="fatMes">R$&nbsp;460.046,94</div>
+        <div class="hero-delta down" id="fatDelta">▼ 68.4% vs mês anterior</div>
+      </div>
+      <div class="breakdown-card">
+        <p class="card-title">Por empresa</p>
+        <div class="breakdown-total" id="fatEmpresaTotal">Total do mês: R$&nbsp;460.046,94</div>
+        <div id="fatEmpresaList"><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Rgc">Rgc</span>
+        <span class="bd-row-value">R$&nbsp;146.812,50</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:100%;background:#6E9BC7"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Sgc">Sgc</span>
+        <span class="bd-row-value">R$&nbsp;123.901,78</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:84.39457130693913%;background:#4F9B7F"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Tefo">Tefo</span>
+        <span class="bd-row-value">R$&nbsp;88.992,83</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:60.61665730097915%;background:#D4AF6A"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Mabille">Mabille</span>
+        <span class="bd-row-value">R$&nbsp;78.171,06</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:53.24550702426565%;background:#C1584A"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Fpavarin">Fpavarin</span>
+        <span class="bd-row-value">R$&nbsp;13.729,85</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:9.351962537249895%;background:#9B7FD4"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Jgc">Jgc</span>
+        <span class="bd-row-value">R$&nbsp;8.197,09</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:5.583373350361856%;background:#7FC1D4"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Grp">Grp</span>
+        <span class="bd-row-value">R$&nbsp;6.109,84</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:4.161661983822903%;background:#D47F9B"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Limegi">Limegi</span>
+        <span class="bd-row-value">-R$&nbsp;5.868,01</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:3.9969416773094935%;background:#A3A88C"></div></div>
+    </div></div>
+      </div>
+    </div>
+
+    <div class="charts-grid" style="margin-bottom:0;">
+      <div class="chart-card">
+        <p class="card-title">Faturamento diário (mês selecionado)</p>
+        <div id="tabelaDiaria" style="max-height:260px;overflow-y:auto;"><table class="tabela-mensal"><tbody><tr>
+      <td class="tm-mes">01/07</td>
+      <td class="tm-valor ">R$&nbsp;42.769,93</td>
+    </tr><tr>
+      <td class="tm-mes">02/07</td>
+      <td class="tm-valor ">R$&nbsp;35.965,99</td>
+    </tr><tr>
+      <td class="tm-mes">03/07</td>
+      <td class="tm-valor ">R$&nbsp;43.913,05</td>
+    </tr><tr>
+      <td class="tm-mes">04/07</td>
+      <td class="tm-valor ">R$&nbsp;18.839,06</td>
+    </tr><tr>
+      <td class="tm-mes">05/07</td>
+      <td class="tm-valor ">R$&nbsp;7.380,75</td>
+    </tr><tr>
+      <td class="tm-mes">06/07</td>
+      <td class="tm-valor ">R$&nbsp;94.404,70</td>
+    </tr><tr>
+      <td class="tm-mes">07/07</td>
+      <td class="tm-valor ">R$&nbsp;67.855,89</td>
+    </tr><tr>
+      <td class="tm-mes">08/07</td>
+      <td class="tm-valor ">R$&nbsp;47.659,02</td>
+    </tr><tr>
+      <td class="tm-mes">09/07</td>
+      <td class="tm-valor ">R$&nbsp;20.698,23</td>
+    </tr><tr>
+      <td class="tm-mes">10/07</td>
+      <td class="tm-valor ">R$&nbsp;80.560,32</td>
+    </tr>
+    <tr><td class="tm-mes" style="font-weight:600;">Total do mês</td><td class="tm-valor" style="color:var(--gold);">R$&nbsp;460.046,94</td></tr>
+  </tbody></table></div>
+      </div>
+      <div class="chart-card">
+        <p class="card-title">Faturamento mensal 2026 (em números)</p>
+        <div id="tabelaMensal"><table class="tabela-mensal"><tbody><tr class="">
+      <td class="tm-mes">Janeiro/26</td>
+      <td class="tm-valor">R$&nbsp;1.745.315,28</td>
+      <td class="tm-var"><span class="neutral">—</span></td>
+    </tr><tr class="">
+      <td class="tm-mes">Fevereiro/26</td>
+      <td class="tm-valor">R$&nbsp;2.071.917,86</td>
+      <td class="tm-var"><span class="up">▲ 18.7%</span></td>
+    </tr><tr class="">
+      <td class="tm-mes">Março/26</td>
+      <td class="tm-valor">R$&nbsp;1.890.570,52</td>
+      <td class="tm-var"><span class="down">▼ 8.8%</span></td>
+    </tr><tr class="">
+      <td class="tm-mes">Abril/26</td>
+      <td class="tm-valor">R$&nbsp;1.592.963,40</td>
+      <td class="tm-var"><span class="down">▼ 15.7%</span></td>
+    </tr><tr class="">
+      <td class="tm-mes">Maio/26</td>
+      <td class="tm-valor">R$&nbsp;2.104.879,63</td>
+      <td class="tm-var"><span class="up">▲ 32.1%</span></td>
+    </tr><tr class="">
+      <td class="tm-mes">Junho/26</td>
+      <td class="tm-valor">R$&nbsp;1.454.133,17</td>
+      <td class="tm-var"><span class="down">▼ 30.9%</span></td>
+    </tr><tr class="tm-selected">
+      <td class="tm-mes">Julho/26</td>
+      <td class="tm-valor">R$&nbsp;460.046,94</td>
+      <td class="tm-var"><span class="down">▼ 68.4%</span></td>
+    </tr><tr class="">
+      <td class="tm-mes">Agosto/26</td>
+      <td class="tm-valor">—</td>
+      <td class="tm-var"></td>
+    </tr><tr class="">
+      <td class="tm-mes">Setembro/26</td>
+      <td class="tm-valor">—</td>
+      <td class="tm-var"></td>
+    </tr><tr class="">
+      <td class="tm-mes">Outubro/26</td>
+      <td class="tm-valor">—</td>
+      <td class="tm-var"></td>
+    </tr><tr class="">
+      <td class="tm-mes">Novembro/26</td>
+      <td class="tm-valor">—</td>
+      <td class="tm-var"></td>
+    </tr><tr class="">
+      <td class="tm-mes">Dezembro/26</td>
+      <td class="tm-valor">—</td>
+      <td class="tm-var"></td>
+    </tr></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-eyebrow caixa">Fluxo de caixa</span>
+      <span class="section-line"></span>
+    </div>
+
+    <div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+      <div class="stat">
+        <div class="stat-label">Entradas do mês</div>
+        <div class="stat-value up" id="entMes">R$&nbsp;542.489,22</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Saídas do mês</div>
+        <div class="stat-value down" id="saiMes">R$&nbsp;369.026,73</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Saldo do mês</div>
+        <div class="stat-value" id="saldoMes" style="color:var(--gold)">R$&nbsp;173.462,49</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Saldo acumulado</div>
+        <div class="stat-value" id="saldoAcumulado" style="color:var(--gold)">R$&nbsp;319.817,07</div>
+      </div>
+    </div>
+
+    <div class="breakdown-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0;">
+      <div class="breakdown-card">
+        <p class="card-title">Entradas por categoria</p>
+        <div class="breakdown-total" id="entCategoriaTotal">Total do mês: R$&nbsp;542.489,22</div>
+        <div id="entCategoriaList"><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Ajuste Contas Bancárias (zerar saldo negativo)">Ajuste Contas Bancárias (zerar saldo negativo)</span>
+        <span class="bd-row-value">R$&nbsp;130.511,65</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:100%;background:#6E9BC7"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Shopee">Shopee</span>
+        <span class="bd-row-value">R$&nbsp;103.020,07</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:78.93553563992182%;background:#4F9B7F"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Boletos / Atacado">Boletos / Atacado</span>
+        <span class="bd-row-value">R$&nbsp;65.334,12</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:50.05999081308067%;background:#D4AF6A"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="ML Netstore">ML Netstore</span>
+        <span class="bd-row-value">R$&nbsp;62.649,62</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:48.00308631451674%;background:#C1584A"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="ML Tefo">ML Tefo</span>
+        <span class="bd-row-value">R$&nbsp;46.393,16</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:35.54714081080119%;background:#9B7FD4"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="ML Mabille">ML Mabille</span>
+        <span class="bd-row-value">R$&nbsp;42.566,68</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:32.615233965703446%;background:#7FC1D4"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="ML RGC">ML RGC</span>
+        <span class="bd-row-value">R$&nbsp;38.940,56</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:29.836845982714955%;background:#D47F9B"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Empréstimos Bancários/Rendimentos">Empréstimos Bancários/Rendimentos</span>
+        <span class="bd-row-value">R$&nbsp;30.378,89</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:23.27676494780351%;background:#A3A88C"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="ML FPA">ML FPA</span>
+        <span class="bd-row-value">R$&nbsp;13.465,34</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:10.317347148702817%;background:#C7936E"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="ML Karol">ML Karol</span>
+        <span class="bd-row-value">R$&nbsp;6.263,83</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:4.799441275932073%;background:#8C9BA8"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Site/Rede/Cielo">Site/Rede/Cielo</span>
+        <span class="bd-row-value">R$&nbsp;2.272,90</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:1.7415303538036644%;background:#B8A6D9"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Venture">Venture</span>
+        <span class="bd-row-value">R$&nbsp;690,40</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:0.528994921143055%;background:#6E9BC7"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Ajustes Boletos">Ajustes Boletos</span>
+        <span class="bd-row-value">R$&nbsp;2,00</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:0.0015324302466484792%;background:#4F9B7F"></div></div>
+    </div></div>
+      </div>
+      <div class="breakdown-card">
+        <p class="card-title">Saídas por categoria</p>
+        <div class="breakdown-total" id="saiCategoriaTotal">Total do mês: R$&nbsp;369.026,73</div>
+        <div id="saiCategoriaList"><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Despesas Administrativas">Despesas Administrativas</span>
+        <span class="bd-row-value">R$&nbsp;206.812,83</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:100%;background:#6E9BC7"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Despesas c/ Pessoal">Despesas c/ Pessoal</span>
+        <span class="bd-row-value">R$&nbsp;46.306,26</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:22.39041939516035%;background:#4F9B7F"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Compras / Importação">Compras / Importação</span>
+        <span class="bd-row-value">R$&nbsp;36.015,43</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:17.414504699732603%;background:#D4AF6A"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Empréstimo">Empréstimo</span>
+        <span class="bd-row-value">R$&nbsp;28.771,42</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:13.911815819163639%;background:#C1584A"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Despesas Financeiras">Despesas Financeiras</span>
+        <span class="bd-row-value">R$&nbsp;22.235,09</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:10.751310738313476%;background:#9B7FD4"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Despesas Comerciais">Despesas Comerciais</span>
+        <span class="bd-row-value">R$&nbsp;13.936,66</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:6.738779214036189%;background:#7FC1D4"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Distribuição de Lucro">Distribuição de Lucro</span>
+        <span class="bd-row-value">R$&nbsp;10.600,00</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:5.1254073550465895%;background:#D47F9B"></div></div>
+    </div><div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="Despesas Tributárias">Despesas Tributárias</span>
+        <span class="bd-row-value">R$&nbsp;4.349,04</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:2.1028869437162094%;background:#A3A88C"></div></div>
+    </div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =====================================================================
+// INTEGRAÇÃO COM AS PLANILHAS DO GOOGLE SHEETS (Despesas 2.0, Pessoal 2.0
+// despesas, Pessoal 2.0 DL, Faturamento QGK 2026, Fluxo de Caixa 3.0)
+// =====================================================================
+
+// As URLs reais das planilhas ficam no servidor (api/sheet.js), não aqui no navegador.
+// Isso evita o bloqueio de CORS que o Google aplica a pedidos feitos direto do navegador.
+const SOURCES = {
+  despesas2: '/api/sheet?source=despesas2',
+  pessoalDespesas: '/api/sheet?source=pessoalDespesas',
+  pessoalDL: '/api/sheet?source=pessoalDL',
+  faturamento: '/api/sheet?source=faturamento',
+  fluxoCaixa: '/api/sheet?source=fluxoCaixa',
+};
+
+// ---------- CSV parsing (robusto, lida com vírgulas dentro de aspas) ----------
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\r') { /* ignora */ }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else field += c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+// ---------- Números em formato BR: "R$ 1.960,37" / "(1.960,37)" ----------
+function parseBRL(str) {
+  if (str === undefined || str === null) return 0;
+  let s = String(str).trim();
+  if (!s) return 0;
+  let neg = false;
+  if (s.startsWith('(') && s.endsWith(')')) { neg = true; s = s.slice(1, -1); }
+  s = s.replace(/^R\$\s*/i, '').replace(/\s/g, '');
+  if (s.startsWith('-')) { neg = true; s = s.slice(1); }
+  s = s.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
+  if (isNaN(n)) return 0;
+  return neg ? -n : n;
+}
+
+function parseDateBR(str) {
+  const m = String(str || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const [, d, mo, y] = m;
+  return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+}
+
+function titleCase(str) {
+  return String(str || '').trim().toLowerCase().replace(/(^|\s|\/)(\S)/g, (m, sep, ch) => sep + ch.toUpperCase());
+}
+
+// ---------- Parser genérico para as planilhas "ledger" (Despesas 2.0, Pessoal despesas, Pessoal DL) ----------
+function parseLedgerCSV(text, sourceLabel) {
+  const rows = parseCSV(text).filter(r => r.some(c => (c || '').trim() !== ''));
+  if (!rows.length) return [];
+  const header = rows[0].map(h => (h || '').trim().toLowerCase());
+  const idx = {
+    date: header.findIndex(h => h === 'data'),
+    grupo: header.findIndex(h => h === 'grupo de despesas'),
+    classificacao: header.findIndex(h => h.startsWith('classifica')),
+    fornecedor: header.findIndex(h => h === 'fornecedor'),
+    valor: header.findIndex(h => h === 'valor'),
+  };
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const date = parseDateBR(r[idx.date]);
+    if (!date) continue;
+    const value = parseBRL(r[idx.valor]);
+    if (!value) continue;
+    const grupo = idx.grupo >= 0 ? titleCase(r[idx.grupo]) : '';
+    const classificacao = idx.classificacao >= 0 ? (r[idx.classificacao] || '').trim() : '';
+    const fornecedor = idx.fornecedor >= 0 ? (r[idx.fornecedor] || '').trim() : '';
+    out.push({
+      id: `${sourceLabel}_${i}`,
+      date,
+      type: 'saida',
+      category: grupo || 'Outras Despesas',
+      description: [classificacao, fornecedor].filter(Boolean).join(' – '),
+      value: Math.abs(value),
+      source: sourceLabel
+    });
+  }
+  return out;
+}
+
+// ---------- Parser Faturamento QGK ----------
+function parseFaturamentoCSV(text) {
+  const rows = parseCSV(text).filter(r => r.some(c => (c || '').trim() !== ''));
+  if (!rows.length) return [];
+  const header = rows[0].map(h => (h || '').trim().toLowerCase());
+  const idx = {
+    date: header.indexOf('data'),
+    valor: header.indexOf('valor'),
+    canal: header.indexOf('canal'),
+    faturadoPor: header.indexOf('faturado por'),
+  };
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const date = parseDateBR(r[idx.date]);
+    if (!date) continue;
+    let value = parseBRL(r[idx.valor]);
+    if (!value) continue;
+    const canal = (r[idx.canal] || '').trim();
+    let fatPor = (r[idx.faturadoPor] || '').trim();
+    const isDevolucao = /devolu/i.test(canal) || /devolu/i.test(fatPor);
+    if (isDevolucao) {
+      value = -Math.abs(value);
+      fatPor = fatPor.replace(/\s*devolu[cç][aã]o\s*$/i, '').trim();
+    } else {
+      value = Math.abs(value);
+    }
+    const company = titleCase(fatPor || 'Outros');
+    out.push({
+      id: `fat_${i}`,
+      date,
+      type: 'faturamento',
+      category: company,
+      description: `Faturamento ${company}${isDevolucao ? ' (devolução)' : ''}`,
+      value,
+      source: 'faturamento_qgk'
+    });
+  }
+  return out;
+}
+
+// ---------- Parser Fluxo de Caixa (formato "deitado") ----------
+const MES_MAP = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
+
+function parseFluxoDateHeader(str) {
+  const m = String(str || '').trim().match(/^(\d{1,2})\/([a-zçã]{3})\.?\/(\d{2})$/i);
+  if (!m) return null;
+  const [, d, mesAbbr, yy] = m;
+  const mes = MES_MAP[mesAbbr.toLowerCase()];
+  if (!mes) return null;
+  const year = 2000 + parseInt(yy, 10);
+  return `${year}-${String(mes).padStart(2, '0')}-${d.padStart(2, '0')}`;
+}
+
+function parseFluxoNumber(str) {
+  if (str === undefined || str === null) return 0;
+  let s = String(str).trim();
+  if (!s) return 0;
+  let neg = false;
+  if (s.startsWith('(') && s.endsWith(')')) { neg = true; s = s.slice(1, -1); }
+  s = s.replace(/^R\$\s*/i, '').replace(/\s/g, '');
+  if (s.startsWith('-')) { neg = true; s = s.slice(1); }
+  s = s.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
+  if (isNaN(n)) return 0;
+  return neg ? -n : n;
+}
+
+function normalizeLabel(s) { return String(s || '').trim().replace(/\s+/g, ' '); }
+
+const FLUXO_ENTRADA_CATEGORIAS = [
+  // 'Previsão Entrada' fica aqui de propósito: a planilha é atualizada diariamente e essa linha
+  // (que puxa da aba planejamento_vendas_qgk) é substituída pelo valor real assim que ele acontece.
+  // Por isso não lemos a aba planejamento_vendas_qgk diretamente (evita duplicar receita já realizada).
+  'Boletos / Atacado', 'Ajustes Boletos', 'Previsão Entrada', 'Previsão Ajuste', 'Planejamento de Vendas',
+  'VENTURE', 'SHOPEE', 'ML NETSTORE', 'ML RGC', 'ML TEFO', 'ML GRP', 'ML FPA', 'ML KAROL', 'ML MABILLE', 'TIKTOK',
+  'Site / Rede / cielo', 'Empréstimos Bancários/Rendimentos/Reembolso', 'Empréstimos / Finimp/Diversos',
+  'BeOn', 'Dom Pedro', 'SP Market', 'Ribeirão', 'QG Store Piracicaba', 'Airsoft',
+  'JUROS ATIVOS', 'DESCONTOS OBTIDOS', 'RECEITA APLIC. FINANCEIRA', 'GANHOS E PERDAS DE CAPITAL', 'RECEITAS COM ROYALTIES'
+];
+
+const FLUXO_SAIDA_IMPORTACAO_CATEGORIAS = [
+  'Importação Airsoft - Pedido Novo', 'Importação Airsoft - Fornecedor', 'Desembaraço Airsoft', 'Ajuste de Numerário',
+  'Importação BeOn - Pedido Novo', 'Importação BeOn - Fornecedor', 'Desembaraço BeOn',
+  'Importação Home & Garden', 'Desembaraço Home & Garden', 'Despesa Frete Home & Garden', 'FRETE IMPORTACAO PF', 'FRETE IMPORTAÇAO PF'
+];
+
+// exclusão de célula específica: lançamento de ajuste p/ zerar contas bancárias, não é receita real
+const FLUXO_EXCLUSOES = [
+  { label: 'Empréstimos / Finimp/Diversos', date: '2026-08-05' }
+];
+
+const FLUXO_LABEL_DISPLAY = {
+  'ml netstore': 'ML Netstore', 'ml rgc': 'ML RGC', 'ml tefo': 'ML Tefo', 'ml grp': 'ML GRP', 'ml fpa': 'ML FPA',
+  'ml karol': 'ML Karol', 'ml mabille': 'ML Mabille', 'shopee': 'Shopee', 'tiktok': 'Tiktok', 'venture': 'Venture',
+  'site / rede / cielo': 'Site/Rede/Cielo', 'boletos / atacado': 'Boletos / Atacado', 'ajustes boletos': 'Ajustes Boletos',
+  'beon': 'BeOn', 'airsoft': 'Airsoft', 'dom pedro': 'Dom Pedro', 'sp market': 'SP Market', 'ribeirão': 'Ribeirão',
+  'qg store piracicaba': 'QG Store Piracicaba', 'planejamento de vendas': 'Planejamento de Vendas',
+  'previsão entrada': 'Previsão Entrada', 'previsão ajuste': 'Previsão Ajuste',
+  'empréstimos bancários/rendimentos/reembolso': 'Empréstimos Bancários/Rendimentos',
+  'empréstimos / finimp/diversos': 'Empréstimos / Finimp/Diversos',
+  'juros ativos': 'Juros Ativos', 'descontos obtidos': 'Descontos Obtidos',
+  'receita aplic. financeira': 'Receita Aplic. Financeira', 'ganhos e perdas de capital': 'Ganhos e Perdas de Capital',
+  'receitas com royalties': 'Receitas com Royalties'
+};
+
+function tidyFluxoCategoryName(lbl) {
+  return FLUXO_LABEL_DISPLAY[lbl.toLowerCase()] || lbl;
+}
+
+function parseFluxoCSV(text) {
+  const rows = parseCSV(text);
+  let dateRowIdx = -1;
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const validCount = rows[i].filter(c => parseFluxoDateHeader(c)).length;
+    if (validCount > 10) { dateRowIdx = i; break; }
+  }
+  if (dateRowIdx === -1) return { entries: [], saldoInicial: null };
+  const dateRow = rows[dateRowIdx];
+  const colDates = dateRow.map(c => parseFluxoDateHeader(c));
+
+  const wanted = {};
+  FLUXO_ENTRADA_CATEGORIAS.forEach(lbl => wanted[lbl.toLowerCase()] = { type: 'entrada', category: tidyFluxoCategoryName(lbl) });
+  FLUXO_SAIDA_IMPORTACAO_CATEGORIAS.forEach(lbl => wanted[lbl.toLowerCase()] = { type: 'saida', category: 'Compras / Importação', desc: lbl });
+
+  let saldoInicial = null;
+  let firstDateCol = null;
+  for (let j = 1; j < colDates.length; j++) {
+    if (colDates[j]) { firstDateCol = j; break; }
+  }
+
+  const out = [];
+  for (let i = dateRowIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    const label = normalizeLabel(row[0] || '');
+    if (!label) continue;
+
+    if (saldoInicial === null && label.toUpperCase() === 'SALDO INICIAL' && firstDateCol !== null) {
+      saldoInicial = parseFluxoNumber(row[firstDateCol]);
+    }
+
+    const match = wanted[label.toLowerCase()];
+    if (!match) continue;
+    for (let j = 1; j < row.length; j++) {
+      const date = colDates[j];
+      if (!date) continue;
+      const raw = row[j];
+      if (raw === undefined || raw.trim() === '') continue;
+      const value = parseFluxoNumber(raw);
+      if (!value) continue;
+      const excluded = FLUXO_EXCLUSOES.some(ex => ex.label.toLowerCase() === label.toLowerCase() && ex.date === date);
+      if (excluded) continue;
+      out.push({
+        id: `fluxo_${i}_${j}`,
+        date,
+        type: match.type,
+        category: match.category,
+        description: match.desc || match.category,
+        value,
+        source: 'fluxo_caixa'
+      });
+    }
+  }
+  return { entries: out, saldoInicial };
+}
+
+// ---------- Carregamento das 5 fontes ----------
+async function fetchCSV(url) {
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.text();
+}
+
+async function loadAllEntries() {
+  const specs = [
+    { key: 'despesas2', label: 'Despesas 2.0 (AIRSOFT)' },
+    { key: 'pessoalDespesas', label: 'Pessoal 2.0 (despesas)' },
+    { key: 'pessoalDL', label: 'Pessoal 2.0 (DL)' },
+    { key: 'faturamento', label: 'Faturamento QGK 2026' },
+    { key: 'fluxoCaixa', label: 'Fluxo de Caixa 3.0' },
+  ];
+
+  const results = await Promise.allSettled(specs.map(s => fetchCSV(SOURCES[s.key])));
+
+  const falhas = [];
+  let entries = [];
+  let saldoInicial = 0;
+
+  results.forEach((res, i) => {
+    const spec = specs[i];
+    if (res.status !== 'fulfilled') {
+      falhas.push({ label: spec.label, erro: res.reason && res.reason.message ? res.reason.message : String(res.reason) });
+      return;
+    }
+    const text = res.value;
+    if (spec.key === 'despesas2') entries = entries.concat(parseLedgerCSV(text, 'despesas2'));
+    else if (spec.key === 'pessoalDespesas') entries = entries.concat(parseLedgerCSV(text, 'pessoal_despesas'));
+    else if (spec.key === 'pessoalDL') entries = entries.concat(parseLedgerCSV(text, 'pessoal_dl'));
+    else if (spec.key === 'faturamento') entries = entries.concat(parseFaturamentoCSV(text));
+    else if (spec.key === 'fluxoCaixa') {
+      const r = parseFluxoCSV(text);
+      entries = entries.concat(r.entries);
+      if (r.saldoInicial !== null) saldoInicial = r.saldoInicial;
+    }
+  });
+
+  return { entries, saldoInicial, falhas };
+}
+
+// ---------- Overlay de carregamento / erro ----------
+function setOverlayStatus(msg) {
+  const el = document.getElementById('loadingStatus');
+  if (el) el.textContent = msg;
+}
+
+function showOverlayError(falhas) {
+  const overlay = document.getElementById('loadingOverlay');
+  const spinner = document.getElementById('loadingSpinner');
+  const errBox = document.getElementById('loadingError');
+  if (spinner) spinner.style.display = 'none';
+  if (errBox) {
+    errBox.style.display = 'block';
+    errBox.innerHTML = '<p style="margin:0 0 10px;">Não consegui carregar ' + falhas.length + ' fonte(s) de dados:</p>' +
+      '<ul style="margin:0 0 16px;padding-left:18px;">' +
+      falhas.map(f => `<li>${f.label} — ${f.erro}</li>`).join('') +
+      '</ul>' +
+      '<button id="retryBtn" style="background:var(--gold);color:var(--ink);border:none;border-radius:6px;padding:8px 16px;font-weight:600;cursor:pointer;">Tentar de novo</button>';
+    const btn = document.getElementById('retryBtn');
+    if (btn) btn.addEventListener('click', () => location.reload());
+  }
+  overlay.classList.remove('hidden');
+}
+
+function hideOverlay() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+// ---------- Estado do painel ----------
+let entries = [];
+let SALDO_INICIAL_REAL = 0;
+let viewDate = new Date(2026, 0, 1); // provisório — ajustado após carregar dados reais
+
+const fmt = v => v.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+const monthKey = d => d.toISOString().slice(0,7);
+
+function monthLabelStr(d){
+  return d.toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+}
+
+document.getElementById('prevMonth').addEventListener('click', ()=>{
+  viewDate.setMonth(viewDate.getMonth()-1); render();
+});
+document.getElementById('nextMonth').addEventListener('click', ()=>{
+  viewDate.setMonth(viewDate.getMonth()+1); render();
+});
+
+function entriesForMonth(mKey){
+  return entries.filter(en => en.date.slice(0,7) === mKey);
+}
+
+const PALETTE = ['#6E9BC7','#4F9B7F','#D4AF6A','#C1584A','#9B7FD4','#7FC1D4','#D47F9B','#A3A88C','#C7936E','#8C9BA8','#B8A6D9'];
+
+function renderBreakdown(listElId, totalElId, monthEntries, type){
+  const items = monthEntries.filter(en=>en.type===type);
+  const byCat = {};
+  items.forEach(en=>{ byCat[en.category] = (byCat[en.category]||0) + en.value; });
+  const rows = Object.entries(byCat).sort((a,b)=> Math.abs(b[1]) - Math.abs(a[1]));
+  const total = rows.reduce((s,[,v])=>s+v, 0);
+  document.getElementById(totalElId).textContent = 'Total do mês: ' + fmt(total);
+  const listEl = document.getElementById(listElId);
+  if(!rows.length){
+    listEl.innerHTML = '<div class="bd-empty">Sem lançamentos neste mês.</div>';
+    return;
+  }
+  const max = Math.max(...rows.map(([,v])=>Math.abs(v)), 1);
+  listEl.innerHTML = rows.map(([name, value], i)=>{
+    const pct = Math.min(100, Math.abs(value)/max*100);
+    const color = PALETTE[i % PALETTE.length];
+    return `<div class="bd-row">
+      <div class="bd-row-top">
+        <span class="bd-row-name" title="${name}">${name}</span>
+        <span class="bd-row-value">${fmt(value)}</span>
+      </div>
+      <div class="bd-bar-track"><div class="bd-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  document.getElementById('monthLabel').textContent = monthLabelStr(viewDate);
+  const mKey = monthKey(viewDate);
+  const monthEntries = entriesForMonth(mKey);
+
+  const fatMes = monthEntries.filter(en=>en.type==='faturamento').reduce((s,en)=>s+en.value,0);
+  const entMes = monthEntries.filter(en=>en.type==='entrada').reduce((s,en)=>s+en.value,0);
+  const saiMes = monthEntries.filter(en=>en.type==='saida').reduce((s,en)=>s+en.value,0);
+  const saldoMes = entMes - saiMes;
+
+  document.getElementById('fatMes').textContent = fmt(fatMes);
+  document.getElementById('entMes').textContent = fmt(entMes);
+  document.getElementById('saiMes').textContent = fmt(saiMes);
+  document.getElementById('saldoMes').textContent = fmt(saldoMes);
+
+  const prevDate = new Date(viewDate); prevDate.setMonth(prevDate.getMonth()-1);
+  const prevFat = entriesForMonth(monthKey(prevDate)).filter(en=>en.type==='faturamento').reduce((s,en)=>s+en.value,0);
+  const deltaEl = document.getElementById('fatDelta');
+  if(prevFat > 0){
+    const pct = ((fatMes - prevFat) / prevFat) * 100;
+    deltaEl.textContent = (pct>=0?'▲ ':'▼ ') + Math.abs(pct).toFixed(1) + '% vs mês anterior';
+    deltaEl.className = 'hero-delta ' + (pct>=0?'up':'down');
+  } else {
+    deltaEl.textContent = 'Sem dado do mês anterior para comparar';
+    deltaEl.className = 'hero-delta neutral';
+  }
+
+  const endOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 0).toISOString().slice(0,10);
+  const acumulado = SALDO_INICIAL_REAL + entries
+    .filter(en => en.type!=='faturamento' && en.date <= endOfMonth)
+    .reduce((s,en)=> s + (en.type==='entrada'? en.value : -en.value), 0);
+  document.getElementById('saldoAcumulado').textContent = fmt(acumulado);
+
+  renderTabelaDiaria(mKey, monthEntries);
+  renderTabelaMensal(mKey);
+  renderBreakdown('fatEmpresaList', 'fatEmpresaTotal', monthEntries, 'faturamento');
+  renderBreakdown('entCategoriaList', 'entCategoriaTotal', monthEntries, 'entrada');
+  renderBreakdown('saiCategoriaList', 'saiCategoriaTotal', monthEntries, 'saida');
+}
+
+function renderTabelaDiaria(mKey, monthEntries){
+  const el = document.getElementById('tabelaDiaria');
+  const [y,m] = mKey.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const perDay = Array(daysInMonth).fill(0);
+  monthEntries.filter(en=>en.type==='faturamento').forEach(en=>{
+    const day = parseInt(en.date.slice(8,10),10);
+    perDay[day-1] += en.value;
+  });
+  const rows = perDay.map((v,i)=>{
+    if(v===0) return '';
+    const dd = String(i+1).padStart(2,'0');
+    const mm = String(m).padStart(2,'0');
+    return `<tr>
+      <td class="tm-mes">${dd}/${mm}</td>
+      <td class="tm-valor ${v<0?'down':''}">${fmt(v)}</td>
+    </tr>`;
+  }).join('');
+  if(!rows){
+    el.innerHTML = '<div class="bd-empty">Sem faturamento neste mês.</div>';
+    return;
+  }
+  const total = perDay.reduce((s,v)=>s+v,0);
+  el.innerHTML = `<table class="tabela-mensal"><tbody>${rows}
+    <tr><td class="tm-mes" style="font-weight:600;">Total do mês</td><td class="tm-valor" style="color:var(--gold);">${fmt(total)}</td></tr>
+  </tbody></table>`;
+}
+
+function renderTabelaMensal(selectedKey){
+  const el = document.getElementById('tabelaMensal');
+  const anos = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+  const nomes = {'01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'};
+  let prevVal = null;
+  const rows = anos.map(mk=>{
+    const val = entriesForMonth(mk).filter(en=>en.type==='faturamento').reduce((s,en)=>s+en.value,0);
+    const [y,m] = mk.split('-');
+    let varHtml = '<span class="neutral">—</span>';
+    if(prevVal !== null && prevVal > 0 && val !== 0){
+      const pct = ((val-prevVal)/prevVal)*100;
+      varHtml = `<span class="${pct>=0?'up':'down'}">${pct>=0?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%</span>`;
+    }
+    if(val !== 0) prevVal = val;
+    const sel = mk===selectedKey ? 'tm-selected' : '';
+    return `<tr class="${sel}">
+      <td class="tm-mes">${nomes[m]}/${y.slice(2)}</td>
+      <td class="tm-valor">${val ? fmt(val) : '—'}</td>
+      <td class="tm-var">${val ? varHtml : ''}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<table class="tabela-mensal"><tbody>${rows}</tbody></table>`;
+}
+
+async function init() {
+  setOverlayStatus('Carregando dados das planilhas…');
+  let result;
+  try {
+    result = await loadAllEntries();
+  } catch (err) {
+    showOverlayError([{ label: 'Carregamento geral', erro: err.message || String(err) }]);
+    return;
+  }
+
+  const specsCount = 5;
+  if (result.falhas.length >= specsCount) {
+    showOverlayError(result.falhas);
+    return;
+  }
+
+  entries = result.entries;
+  SALDO_INICIAL_REAL = result.saldoInicial || 0;
+
+  const lastFatDate = entries.filter(en => en.type === 'faturamento').map(en => en.date).sort().pop();
+  if (lastFatDate) {
+    const [y, m] = lastFatDate.split('-').map(Number);
+    viewDate = new Date(y, m - 1, 1);
+  } else {
+    viewDate = new Date();
+    viewDate.setDate(1);
+  }
+
+  hideOverlay();
+  render();
+
+  if (result.falhas.length > 0) {
+    const warn = document.createElement('div');
+    warn.style.cssText = 'background:#3a2a1a;border:1px solid var(--gold);color:var(--paper);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12.5px;';
+    warn.innerHTML = '<strong>Atenção:</strong> não consegui carregar ' + result.falhas.length +
+      ' fonte(s) de dados (' + result.falhas.map(f => f.label).join(', ') +
+      '). O painel está mostrando só o que carregou com sucesso.';
+    const wrap = document.querySelector('.wrap');
+    wrap.insertBefore(warn, wrap.firstChild);
+  }
+}
+
+init();
+</script>
+
+
+</body></html>
