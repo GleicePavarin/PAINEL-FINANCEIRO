@@ -1,0 +1,7 @@
+{
+  "name": "painel-financeiro",
+  "private": true,
+  "dependencies": {
+    "@vercel/functions": "latest"
+  }
+}
